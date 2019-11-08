@@ -117,8 +117,12 @@ class KernelSource:
             with open(os.devnull, "w") as devnull:
                 cscope_output = check_output(command, stderr=devnull).decode(
                     'utf-8')
+             # Note: there is a bug in CScope that causes it to consider a
+             # struct field declaration with the same name a global definition.
+             # These false entries have to be excluded to correctly find some
+             # symbols.
             return [l for l in cscope_output.splitlines() if
-                    l.split()[0].endswith("c")]
+                    l.split()[0].endswith("c") and ("." + symbol) not in l]
         except CalledProcessError:
             return []
 
@@ -144,12 +148,18 @@ class KernelSource:
         try:
             cscope_defs = self._cscope_run(symbol, True)
 
-            # It may not be enough to get the definitions from the cscope.
-            # There are multiple possible reasons:
-            #   - the symbol is only defined in headers
-            #   - there is a bug in cscope - it cannot find definitions
-            #     containing function pointers as parameters
-            cscope_uses = self._cscope_run(symbol, False)
+            if cscope_defs == [] or symbol.startswith("static_key_slow_"):
+                # No file with definition was found, try to look for symbol
+                # uses.
+                # There are multiple possible reasons:
+                #   - the symbol is only defined in headers
+                #   - there is a bug in cscope - it cannot find definitions
+                #     containing function pointers as parameters
+                cscope_uses = self._cscope_run(symbol, False)
+            else:
+                # In case the definition was found in a different file than
+                # header file, it is very unlikely to be in another source file
+                cscope_uses = []
 
             # Look whether this is one of the special cases when cscope does
             # not find a correct source because of the exact symbol being
