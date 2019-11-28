@@ -56,8 +56,7 @@ def test_find_srcs_with_symbol_def(source):
     """Test finding sources with function definition."""
     srcs = source.find_srcs_with_symbol_def("ipmi_set_gets_events")
     assert sorted(srcs) == sorted([
-        "drivers/char/ipmi/ipmi_msghandler.c",
-        "drivers/char/ipmi/ipmi_devintf.c"
+        "drivers/char/ipmi/ipmi_msghandler.c"
     ])
 
 
