@@ -38,13 +38,12 @@ class LlvmSourceFinder(ABC):
 
     @abstractmethod
     def find_llvm_with_symbol_def(self, symbol):
-        """Get LlvmKernelModule containing definition of the given symbol."""
+        """Get LlvmModule containing definition of the given symbol."""
         pass
 
     @abstractmethod
     def find_llvm_with_symbol_use(self, symbol):
         """
-        Get a list of LlvmKernelModules containing functions using the given
-        symbol.
+        Get a list of LlvmModules containing functions using the given symbol.
         """
         pass
