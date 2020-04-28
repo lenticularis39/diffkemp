@@ -119,8 +119,8 @@ class DifferentialFunctionComparator : public FunctionComparator {
 
     /// Finds all differences between source types in GEPs inside two field
     /// access abstractions and records them using findTypeDifference.
-    void findTypeDifferences(const Function *FAL,
-                             const Function *FAR,
+    void findTypeDifferences(const GetElementPtrInst *FAL,
+                             const GetElementPtrInst *FAR,
                              const Function *L,
                              const Function *R) const;
 
