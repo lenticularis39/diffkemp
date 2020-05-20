@@ -90,6 +90,9 @@ void DebugInfo::extractAlignmentFromInstructions(GetElementPtrInst *GEP,
             auto indexedType = GEP->getIndexedType(GEP->getSourceElementType(),
                                                    ArrayRef<Value *>(indices));
 
+            if (!indexedType)
+                continue;
+
             Type *indexedTypeOther = nullptr;
             if (OtherGEP)
                 indexedTypeOther = OtherGEP->getIndexedType(
@@ -385,6 +388,10 @@ void DebugInfo::calculateMacroAlignments() {
 /// Find all macros and enum values that define a value corresponding to the
 /// value of the given constant and add them to the MacroUsageMap.
 void DebugInfo::collectMacrosWithValue(const Constant *Val) {
+    if (Val->getType()->isIntegerTy(80))
+        // 80-bit integers can't be converted into a string.
+        return;
+
     std::string valStr = valueAsString(Val);
     if (valStr.empty())
         return;
