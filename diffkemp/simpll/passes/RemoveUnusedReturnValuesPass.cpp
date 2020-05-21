@@ -84,8 +84,6 @@ PreservedAnalyses RemoveUnusedReturnValuesPass::run(
         // this is an easier solution.)
         ValueToValueMapTy Map;
         std::string OriginalName = Fun->getName();
-        if (hasSuffix(OriginalName))
-            OriginalName = dropSuffix(OriginalName);
         Fun->setName("");
         Function *Fun_Clone;
         if (!Fun->isDeclaration())
