@@ -33,7 +33,7 @@ PreservedAnalyses
             continue;
         std::string originalName = Fun.getName();
         std::string strippedName = hasSuffix(originalName)
-                                           ? dropSuffix(originalName)
+                                           ? dropSuffixes(originalName)
                                            : originalName;
         GroupingMap[strippedName].push_back(&Fun);
     }
@@ -57,7 +57,7 @@ PreservedAnalyses
         // If FirstF has a suffix, drop it to ensure that the suffix won't end
         // up anywhere in the output of SimpLL.
         auto name = FirstF->getName().str();
-        name = hasSuffix(name) ? dropSuffix(name) : name;
+        name = hasSuffix(name) ? dropSuffixes(name) : name;
         FirstF->setName(name);
     }
 

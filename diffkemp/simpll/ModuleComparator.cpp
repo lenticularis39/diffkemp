@@ -49,10 +49,10 @@ void ModuleComparator::compareFunctions(Function *FirstFun,
         // suffix.
         auto FirstFunName = FirstFun->getName().str();
         if (hasSuffix(FirstFunName))
-            FirstFunName = dropSuffix(FirstFunName);
+            FirstFunName = dropSuffixes(FirstFunName);
         auto SecondFunName = SecondFun->getName().str();
         if (hasSuffix(SecondFunName))
-            SecondFunName = dropSuffix(SecondFunName);
+            SecondFunName = dropSuffixes(SecondFunName);
 
         if (config.ControlFlowOnly) {
             // If checking control flow only, it suffices that one of the

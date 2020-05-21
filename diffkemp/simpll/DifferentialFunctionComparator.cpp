@@ -752,14 +752,14 @@ int DifferentialFunctionComparator::cmpGlobalValues(GlobalValue *L,
         return cmpConstants(GVarL->getInitializer(), GVarR->getInitializer());
     } else if (L->hasName() && R->hasName()) {
         // Both values are named, compare them by names
-        auto NameL = L->getName();
-        auto NameR = R->getName();
+        std::string NameL = L->getName();
+        std::string NameR = R->getName();
 
         // Remove number suffixes
         if (hasSuffix(NameL))
-            NameL = NameL.substr(0, NameL.find_last_of("."));
+            NameL = dropSuffixes(NameL);
         if (hasSuffix(NameR))
-            NameR = NameR.substr(0, NameR.find_last_of("."));
+            NameR = dropSuffixes(NameR);
         if (NameL == NameR
             || (isPrintFunction(NameL) && isPrintFunction(NameR))) {
             if (isa<Function>(L) && isa<Function>(R)) {
@@ -845,10 +845,10 @@ void DifferentialFunctionComparator::findTypeDifferences(
         if (!STyL->hasName() || !STyR->hasName())
             continue;
         std::string STyLShortName = hasSuffix(STyL->getName())
-                                            ? dropSuffix(STyL->getName())
+                                            ? dropSuffixes(STyL->getName())
                                             : STyL->getName().str();
         std::string STyRShortName = hasSuffix(STyR->getName())
-                                            ? dropSuffix(STyR->getName())
+                                            ? dropSuffixes(STyR->getName())
                                             : STyR->getName().str();
         if (STyLShortName != STyRShortName)
             continue;
