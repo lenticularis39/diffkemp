@@ -132,6 +132,37 @@ std::string dropSuffixes(std::string Name) {
     return Name;
 }
 
+// Attempts to find matching names of the global values and saves them
+// (without suffixes) into Result if successful.
+// Return true when a match is found, otherwise returns false.
+bool matchGlobalValueNames(const GlobalValue *L,
+                           const GlobalValue *R,
+                           std::pair<std::string, std::string> &Result) {
+    // Start with the original global value name.
+    std::set<std::string> NamesL{dropSuffixes(L->getName())};
+    std::set<std::string> NamesR{dropSuffixes(R->getName())};
+
+    // Add unaliased names.
+    if (auto FunL = getCalledFunction(L))
+        NamesL.insert(dropSuffixes(FunL->getName()));
+    if (auto FunR = getCalledFunction(R))
+        NamesR.insert(dropSuffixes(FunR->getName()));
+
+    // Try to find a match.
+    for (auto &NameL : NamesL) {
+        for (auto &NameR : NamesR) {
+            if (NameL == NameR
+                || (isPrintFunction(NameL) && isPrintFunction(NameR))) {
+                Result.first = NameL;
+                Result.second = NameR;
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 /// Join directory path with a filename in case the filename does not already
 /// contain the directory.
 std::string joinPath(StringRef DirName, StringRef FileName) {

@@ -751,27 +751,24 @@ int DifferentialFunctionComparator::cmpGlobalValues(GlobalValue *L,
         // Constant global variables are compared using their initializers.
         return cmpConstants(GVarL->getInitializer(), GVarR->getInitializer());
     } else if (L->hasName() && R->hasName()) {
-        // Both values are named, compare them by names
-        std::string NameL = L->getName();
-        std::string NameR = R->getName();
+        // Both values are named, compare them by names.
+        // Note: global values can have multiple synonymous names because of
+        // aliasing and number suffixes.
+        std::pair<std::string, std::string> Names;
 
-        // Remove number suffixes
-        if (hasSuffix(NameL))
-            NameL = dropSuffixes(NameL);
-        if (hasSuffix(NameR))
-            NameR = dropSuffixes(NameR);
-        if (NameL == NameR
-            || (isPrintFunction(NameL) && isPrintFunction(NameR))) {
-            if (isa<Function>(L) && isa<Function>(R)) {
+        if (matchGlobalValueNames(L, R, Names)) {
+            // Note: getCalledFunction is used instead of a cast to bypass
+            // aliases.
+            auto FunL = getCalledFunction(L);
+            auto FunR = getCalledFunction(R);
+
+            if (FunL && FunR) {
                 // Functions compared as being the same have to be also compared
                 // by ModuleComparator.
-                auto FunL = dyn_cast<Function>(L);
-                auto FunR = dyn_cast<Function>(R);
-
-                // Do not compare SimpLL abstractions.
+                // Do not compare SimpLL abstractions and print functions.
                 if (!isSimpllAbstraction(FunL) && !isSimpllAbstraction(FunR)
-                    && (!isPrintFunction(L->getName())
-                        && !isPrintFunction(R->getName()))) {
+                    && (!isPrintFunction(Names.first)
+                        && !isPrintFunction(Names.second))) {
                     // Store the called functions into the current
                     // functions' callee set.
                     ModComparator->ComparedFuns.at({FnL, FnR})
@@ -797,9 +794,8 @@ int DifferentialFunctionComparator::cmpGlobalValues(GlobalValue *L,
             }
             return 0;
 
-        } else if (NameL != NameR && GVarL && GVarR && GVarL->isConstant()
-                   && GVarR->isConstant() && !GVarL->hasInitializer()
-                   && !GVarR->hasInitializer()) {
+        } else if (GVarL && GVarR && GVarL->isConstant() && GVarR->isConstant()
+                   && !GVarL->hasInitializer() && !GVarR->hasInitializer()) {
             // Externally defined constants (those without initializer
             // and with different names) need to have their definitions linked.
             ModComparator->MissingDefs.push_back({GVarL, GVarR});
