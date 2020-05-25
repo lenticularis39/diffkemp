@@ -86,6 +86,9 @@ class DebugInfo {
     /// the macro value.
     std::map<std::string, std::set<const Constant *>> MacroUsageMap;
 
+    /// Mapping macro values to their names.
+    std::map<std::string, std::string> MacroValueMap;
+
     /// Calculate alignments of the corresponding indices for one GEP
     /// instruction.
     void extractAlignmentFromInstructions(GetElementPtrInst *GEPL,
@@ -96,6 +99,10 @@ class DebugInfo {
 
     /// Calculate alignments of the corresponding macros
     void calculateMacroAlignments();
+
+    /// Generates a macro value to macro name map for use in
+    /// collectMacrosWithValue.
+    void populateMacroValueMap();
 
     /// Find all macros in the first module having the given value
     void collectMacrosWithValue(const Constant *Val);

@@ -344,6 +344,8 @@ void DebugInfo::calculateMacroAlignments() {
     if (DebugInfoFirst.type_count() == 0 || DebugInfoSecond.type_count() == 0)
         return;
 
+    populateMacroValueMap();
+
     // Find all constants used in the first module whose values correspond to
     // some macro value.
     for (auto &Fun : ModFirst) {
@@ -385,6 +387,26 @@ void DebugInfo::calculateMacroAlignments() {
     }
 }
 
+/// Generates a macro value to macro name map for use in
+/// collectMacrosWithValue.
+void DebugInfo::populateMacroValueMap() {
+    for (auto *CompileUnit : DebugInfoFirst.compile_units()) {
+        for (auto *MacroNode : CompileUnit->getMacros()) {
+            if (auto *Macro = dyn_cast<DIMacro>(MacroNode)) {
+                MacroValueMap[Macro->getValue()] = Macro->getName();
+            }
+        }
+        for (auto *Enum : CompileUnit->getEnumTypes()) {
+            for (auto *EnumField : Enum->getElements()) {
+                if (auto *Enumerator = dyn_cast<DIEnumerator>(EnumField)) {
+                    MacroValueMap[std::to_string(Enumerator->getValue())] =
+                            Enumerator->getName();
+                }
+            }
+        }
+    }
+}
+
 /// Find all macros and enum values that define a value corresponding to the
 /// value of the given constant and add them to the MacroUsageMap.
 void DebugInfo::collectMacrosWithValue(const Constant *Val) {
@@ -396,23 +418,8 @@ void DebugInfo::collectMacrosWithValue(const Constant *Val) {
     if (valStr.empty())
         return;
 
-    for (auto *CompileUnit : DebugInfoFirst.compile_units()) {
-        for (auto *MacroNode : CompileUnit->getMacros()) {
-            if (auto *Macro = dyn_cast<DIMacro>(MacroNode)) {
-                if (Macro->getValue() == valStr) {
-                    MacroUsageMap[Macro->getName()].insert(Val);
-                }
-            }
-        }
-        for (auto *Enum : CompileUnit->getEnumTypes()) {
-            for (auto *EnumField : Enum->getElements()) {
-                if (auto *Enumerator = dyn_cast<DIEnumerator>(EnumField)) {
-                    if (std::to_string(Enumerator->getValue()) == valStr) {
-                        MacroUsageMap[Enumerator->getName()].insert(Val);
-                    }
-                }
-            }
-        }
+    if (MacroValueMap.find(valStr) != MacroValueMap.end()) {
+        MacroUsageMap[MacroValueMap[valStr]].insert(Val);
     }
 }
 
