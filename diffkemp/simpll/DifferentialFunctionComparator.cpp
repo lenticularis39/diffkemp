@@ -924,6 +924,9 @@ int DifferentialFunctionComparator::cmpFieldAccess(
     if (!(GEPL && GEPR))
         return 1;
 
+    if (!GEPL->hasAllConstantIndices() || !GEPR->hasAllConstantIndices())
+        return 1;
+
     const Value *PtrL = GEPL->getOperand(0);
     const Value *PtrR = GEPR->getOperand(0);
 
